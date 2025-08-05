@@ -1,5 +1,5 @@
-# Make sure all of these are imported at the top
-from flask import Flask, request, jsonify, render_template
+# Import required libraries
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
 import numpy as np
@@ -7,8 +7,7 @@ import joblib
 
 # Initialize the Flask app
 app = Flask(__name__)
-# Enable CORS
-CORS(app)
+CORS(app)  # Enable Cross-Origin Resource Sharing
 
 # Load the model and pipeline
 try:
@@ -19,12 +18,12 @@ except Exception as e:
     model = None
     pipeline = None
 
-# This route serves the main HTML page
+# Root route for testing if API is live
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return "API is live!"
 
-# This route handles the predictions
+# Prediction route
 @app.route('/predict', methods=['POST'])
 def predict():
     if model is None or pipeline is None:
@@ -34,7 +33,7 @@ def predict():
         json_data = request.get_json()
         input_df = pd.DataFrame([json_data])
 
-        # Data type conversion
+        # Ensure correct data types
         input_df['vehicle_age'] = input_df['vehicle_age'].astype(int)
         input_df['km_driven'] = input_df['km_driven'].astype(int)
         input_df['mileage'] = input_df['mileage'].astype(float)
@@ -42,15 +41,17 @@ def predict():
         input_df['max_power'] = input_df['max_power'].astype(float)
         input_df['seats'] = input_df['seats'].astype(int)
 
+        # Transform the input and predict
         transformed_data = pipeline.transform(input_df)
         prediction_log = model.predict(transformed_data)
-        prediction = np.expm1(prediction_log)
-        
+        prediction = np.expm1(prediction_log)  # Convert log price back
+
         result_text = f'₹{prediction[0]:,.0f}'
         return jsonify({'prediction_text': result_text})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
+# Run the app
 if __name__ == '__main__':
     app.run(debug=True)
