@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: test3
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    pythonVersion: 3.11.9
+    plan: free
+    region: oregon
